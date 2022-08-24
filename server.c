@@ -10,10 +10,12 @@
 
 const char *products[] = { "My Product 1", "My Product 2", "My Product 3", "My Product 4"};
 
-
-
+/*
+ * Defining structs and
+ */
+struct urlBuilder;
 void db_handle_client(int client_fd);
-
+char* construct_url(struct urlBuilder url);
 
 
 void error(const char *msg){
@@ -21,6 +23,13 @@ void error(const char *msg){
     exit(1);
 }
 
+struct urlBuilder{
+    char *schema;
+    char *host;
+    int port;
+    char *path;
+    char *parameter;
+} ;
 
 
 int main(void)
@@ -29,8 +38,7 @@ int main(void)
     int socket_number = 8080;
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if(fd < 0){
-        printf("Error in socket creation");
-        return(-1);
+        error("Socket creation failed");
     }
     printf("Opening socket %d:\n", socket_number);
 
@@ -38,19 +46,16 @@ int main(void)
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
     server_address.sin_port = htons(socket_number);
-    printf("Server Initialised\n");
 
     /* Bind socket with IP address and Port*/
     int br = bind(fd, (const struct sockaddr *) &server_address, sizeof(server_address));
     if (br < 0) {
-        printf("Error during binding!");
-        return(-1);
+        error("Binding failed!");
     }
-    printf("Socket bound to server address\n");
 
     /* Listen for incoming connections */
     listen(fd, SOMAXCONN);
-    printf("Listening for requests...\n");
+    printf("Listening for requests...\n\n");
 
     /* Accept */
     while(1){
@@ -67,22 +72,37 @@ int main(void)
 }
 
 
-
 void db_handle_client(int client_fd)
 {
-    char outmsg[DEFAULT_STRLEN];
-    char inmsg[DEFAULT_STRLEN];
+    char out_msg[DEFAULT_STRLEN];
+    char in_msg[DEFAULT_STRLEN];
 
     if(client_fd < 0) {
-        printf("Error: Failed to accept client connection\n");
-        return;
+        error("Failed to accept client connection\n");
     }
-    printf("Connection established\n");
+    printf("Connection established:\n");
 
     /* Read request message from client and print the message*/
+    memset(in_msg, 0, DEFAULT_STRLEN);
+    ssize_t request = recv(client_fd, in_msg, DEFAULT_STRLEN, 0);
+//    printf("%s", in_msg);
 
     /* Send response to client */
+    if (strstr(in_msg, "GET") != NULL) {
+        printf("DETECTED GET\n");
+    }
+    if (strstr(in_msg, "POST") != NULL) {
+        printf("DETECTED POST\n");
+    }
+    if (strstr(in_msg, "DELETE") != NULL) {
+        printf("DETECTED DELETE\n");
+    }
 
 
     shutdown(client_fd,SHUT_RDWR);
+}
+
+
+char* construct_url(struct urlBuilder url) {
+    return NULL;
 }
