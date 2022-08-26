@@ -4,26 +4,28 @@
 #include<stdlib.h>
 #include <netinet/in.h>
 #include<unistd.h>
+#include<ctype.h>
 
 #define DEFAULT_STRLEN 30000
 #define SERVER_PORT  8080
 #define DEFAULT_NUM_HEADERS 10
-//#define SERVER_PORT  1
+#define MAX_DIGITS 5
 
 const char *products[] = { "My Product 1", "My Product 2", "My Product 3", "My Product 4"};
 
-struct response_builder{
+struct response_builder {
     char *http_ver;
     char *status;
     char *headers[DEFAULT_NUM_HEADERS]; // array of headers
     char *body;
-} ;
+};
 
 /* Define functions */
 void db_handle_client(int client_fd);
 void send_welcome(int client_fd, char* out_msg);
-void handle_get(int client_fd, char *query);
-char* construct_response(struct response_builder *resp);
+void handle_get(int client_fd, char *query, char* out_msg);
+char* construct_response(struct response_builder *resp, int hasBody);
+void send_response(int client_fd, char* response, char* buffer);
 
 
 void error(const char *msg){
@@ -71,7 +73,10 @@ int main(void)
     return 0;
 }
 
-
+/**
+ * Handles requests from clients and sent responses accordingly
+ * @param client_fd
+ */
 void db_handle_client(int client_fd)
 {
     char out_msg[DEFAULT_STRLEN];
@@ -88,53 +93,103 @@ void db_handle_client(int client_fd)
     recv(client_fd, in_msg, DEFAULT_STRLEN, 0);
     printf("%s", in_msg);
 
-    /* Send response to client */
+    // Respond to GET request
     if (strstr(in_msg, "GET /") != NULL) {
-        char * query = in_msg + strlen("GET /");
-
-        send_welcome(client_fd, out_msg);
+        char* query = strchr(in_msg, '/') + 1;
+        if (query[0] != ' ') {
+            handle_get(client_fd, query, out_msg);
+        }
+        else {
+            send_welcome(client_fd, out_msg);
+        }
     }
+    // Respond to POST request
     if (strstr(in_msg, "POST /") != NULL) {
         printf("DETECTED POST\n");
     }
+    // Respond to DELETE request
     if (strstr(in_msg, "DELETE /") != NULL) {
         printf("DETECTED DELETE\n");
     }
 
-    //TODO CURRENTLY NON PERSISTENT!
-    shutdown(client_fd,SHUT_RDWR);
+    shutdown(client_fd,SHUT_RDWR); //TODO CURRENTLY NON PERSISTENT!
 }
 
-void send_welcome(int client_fd, char* out_msg) {
+void handle_get(int client_fd, char *query, char* out_msg)
+{
     // Initialise memory for new response message to 0
-    struct response_builder* ptr = calloc(1, sizeof(struct response_builder));
-    if (ptr == NULL) {
-        error("Malloc error");
+    struct response_builder* resp = calloc(1, sizeof(struct response_builder));
+    if (resp == NULL) {
+        error("Memory allocation error");
     }
-
-    ptr->http_ver = "HTTP/1.0";
-    ptr->status = "200 OK";
+    resp->http_ver = "HTTP/1.0";
     char *content_type = "Content-Type: text/plain; charset=UTF-8";
     char *conn = "Connection: close";
-    ptr->headers[0] = content_type;
-    ptr->headers[1] = conn;
-    ptr->body = "Hello from Server";
+    resp->headers[0] = content_type;
+    resp->headers[1] = conn;
 
-    // Concatenate components into a single char array
-    char *response = (char *) construct_response(ptr);
+    char to_convert[MAX_DIGITS];
+    char* end_of_input = strchr(query, ' ');
+    int i = 0;
 
-    u_long output_len = strlen(response);
-    strcpy(out_msg, response);
+    for (char* ptr = query; ptr != end_of_input; ptr++) {
+        if (i == MAX_DIGITS - 1 || isalpha(ptr[0])) {
+            resp->status = "400 bad request";
+            send_response(client_fd, construct_response(resp, 0), out_msg);
+            free(resp);
+            return;
+        }
+        to_convert[i] = ptr[0];
+        i++;
+    }
 
-    // Send response to request
-    send(client_fd, out_msg, output_len, 0);
-
-    // free dynamically allocated memory used to generate response
-    free(response);
-    free(ptr);
+    int index = atoi(to_convert);
+    if ((sizeof(products)/sizeof(products[0])) < index || index <= 0) {
+        resp->status = "404 not found";
+        send_response(client_fd, construct_response(resp, 0), out_msg);
+        free(resp);
+    }
+    else {
+        resp->status = "200 OK";
+        char tmp[strlen(products[index -1])];
+        strcpy(tmp, products[index - 1]);
+        resp->body = tmp;
+        send_response(client_fd, construct_response(resp, 1), out_msg);
+        free(resp);
+    }
 }
 
-char* construct_response(struct response_builder *resp) {
+/**
+ * Sends a welcome message (Acts as the website homepage)
+ * @param client_fd
+ * @param out_msg
+ */
+void send_welcome(int client_fd, char* out_msg)
+{
+    // Initialise memory for new response message to 0
+    struct response_builder* resp = calloc(1, sizeof(struct response_builder));
+    if (resp == NULL) {
+        error("Memory allocation error");
+    }
+    resp->http_ver = "HTTP/1.0";
+    resp->status = "200 OK";
+    char *content_type = "Content-Type: text/plain; charset=UTF-8";
+    char *conn = "Connection: close";
+    resp->headers[0] = content_type;
+    resp->headers[1] = conn;
+    resp->body = "Hello from Server";
+
+    send_response(client_fd, construct_response(resp, 1), out_msg);
+    free(resp);
+}
+
+/**
+ * Composes all response message components as a single string
+ * @param resp
+ * @return
+ */
+char* construct_response(struct response_builder *resp, int hasBody)
+{
     char *message;
     message = malloc(strlen(resp->http_ver) + 2);
     strcpy(message, resp->http_ver);
@@ -162,10 +217,26 @@ char* construct_response(struct response_builder *resp) {
     strcat(concat_headers, "\n");
     strcat(concat_headers, "\0");
 
-    char *concat_body = realloc(concat_headers, strlen(resp->body) + strlen(concat_headers) + 2);
-    strcat(concat_body, resp->body);
-    strcat(concat_body, "\n");
-    strcat(concat_body, "\0");
+    if (hasBody) {
+        char *concat_body = realloc(concat_headers, strlen(resp->body) + strlen(concat_headers) + 2);
+        strcat(concat_body, resp->body);
+        strcat(concat_body, "\n");
+        strcat(concat_body, "\0");
 
-    return concat_body;
+        return concat_body;
+    }
+
+    return concat_headers;
+}
+
+void send_response(int client_fd, char* response, char* buffer)
+{
+    u_long output_len = strlen(response);
+    strcpy(buffer, response);
+
+    // Send response to request
+    send(client_fd, buffer, output_len, 0);
+
+    // free dynamically allocated memory used to generate response
+    free(response);
 }
