@@ -3,8 +3,8 @@
 #include<string.h>
 #include<stdlib.h>
 #include <netinet/in.h>
-#include<unistd.h>
 #include<ctype.h>
+#include <time.h>
 
 #define DEFAULT_STRLEN 30000
 #define SERVER_PORT  8080
@@ -26,6 +26,8 @@ void send_welcome(int client_fd, char* out_msg);
 void handle_get(int client_fd, char *query, char* out_msg);
 char* construct_response(struct response_builder *resp, int hasBody);
 void send_response(int client_fd, char* response, char* buffer);
+void send_bad_request(int client_fd, char* out_msg);
+char* get_current_time(char* buffer);
 
 
 void error(const char *msg){
@@ -98,18 +100,12 @@ void db_handle_client(int client_fd)
         char* query = strchr(in_msg, '/') + 1;
         if (query[0] != ' ') {
             handle_get(client_fd, query, out_msg);
-        }
-        else {
+        } else {
             send_welcome(client_fd, out_msg);
         }
-    }
-    // Respond to POST request
-    if (strstr(in_msg, "POST /") != NULL) {
-        printf("DETECTED POST\n");
-    }
-    // Respond to DELETE request
-    if (strstr(in_msg, "DELETE /") != NULL) {
-        printf("DETECTED DELETE\n");
+    } else {
+        // sends bad request (400) to any other request message types
+        send_bad_request(client_fd, out_msg);
     }
 
     shutdown(client_fd,SHUT_RDWR); //TODO CURRENTLY NON PERSISTENT!
@@ -123,16 +119,23 @@ void handle_get(int client_fd, char *query, char* out_msg)
         error("Memory allocation error");
     }
     resp->http_ver = "HTTP/1.0";
-    char *content_type = "Content-Type: text/plain; charset=UTF-8";
+    //generate HTTP headers
+    char *access_control = "Access-Control-Allow-Origin: *";
     char *conn = "Connection: close";
-    resp->headers[0] = content_type;
+    char *content_type = "Content-Type: text/plain; charset=UTF-8";
+    char time_buffer[128] = {"Date: "};
+    char *date = get_current_time(time_buffer);
+    resp->headers[0] = access_control;
     resp->headers[1] = conn;
+    resp->headers[2] = content_type;
+    resp->headers[3] = date;
 
+    // determine body of the message
     char to_convert[MAX_DIGITS];
     char* end_of_input = strchr(query, ' ');
     int i = 0;
-
     for (char* ptr = query; ptr != end_of_input; ptr++) {
+        // determine if input from GET is valid
         if (i == MAX_DIGITS - 1 || isalpha(ptr[0])) {
             resp->status = "400 bad request";
             send_response(client_fd, construct_response(resp, 0), out_msg);
@@ -147,7 +150,6 @@ void handle_get(int client_fd, char *query, char* out_msg)
     if ((sizeof(products)/sizeof(products[0])) < index || index <= 0) {
         resp->status = "404 not found";
         send_response(client_fd, construct_response(resp, 0), out_msg);
-        free(resp);
     }
     else {
         resp->status = "200 OK";
@@ -155,8 +157,8 @@ void handle_get(int client_fd, char *query, char* out_msg)
         strcpy(tmp, products[index - 1]);
         resp->body = tmp;
         send_response(client_fd, construct_response(resp, 1), out_msg);
-        free(resp);
     }
+    free(resp);
 }
 
 /**
@@ -173,10 +175,16 @@ void send_welcome(int client_fd, char* out_msg)
     }
     resp->http_ver = "HTTP/1.0";
     resp->status = "200 OK";
-    char *content_type = "Content-Type: text/plain; charset=UTF-8";
+    //generate HTTP headers
+    char *access_control = "Access-Control-Allow-Origin: *";
     char *conn = "Connection: close";
-    resp->headers[0] = content_type;
+    char *content_type = "Content-Type: text/plain; charset=UTF-8";
+    char time_buffer[128] = {"Date: "};
+    char *date = get_current_time(time_buffer);
+    resp->headers[0] = access_control;
     resp->headers[1] = conn;
+    resp->headers[2] = content_type;
+    resp->headers[3] = date;
     resp->body = "Hello from Server";
 
     send_response(client_fd, construct_response(resp, 1), out_msg);
@@ -201,7 +209,7 @@ char* construct_response(struct response_builder *resp, int hasBody)
     strcat(concat_status, "\n");
     strcat(concat_status, "\0");
 
-    char* all_headers = malloc(0);
+    char* all_headers = calloc(1, 0);
     int num_headers = sizeof(resp->headers)/sizeof(resp->headers[0]);
     for (int i = 0; i < num_headers; i++) {
         if (resp->headers[i] == NULL) { break; }
@@ -216,6 +224,7 @@ char* construct_response(struct response_builder *resp, int hasBody)
     strcat(concat_headers, all_headers);
     strcat(concat_headers, "\n");
     strcat(concat_headers, "\0");
+    free(all_headers);
 
     if (hasBody) {
         char *concat_body = realloc(concat_headers, strlen(resp->body) + strlen(concat_headers) + 2);
@@ -229,6 +238,29 @@ char* construct_response(struct response_builder *resp, int hasBody)
     return concat_headers;
 }
 
+void send_bad_request(int client_fd, char* out_msg) {
+    // Initialise memory for new response message to 0
+    struct response_builder* resp = calloc(1, sizeof(struct response_builder));
+    if (resp == NULL) {
+        error("Memory allocation error");
+    }
+    resp->http_ver = "HTTP/1.0";
+    resp->status = "400 bad request";
+    //generate HTTP headers
+    char *access_control = "Access-Control-Allow-Origin: *";
+    char *conn = "Connection: close";
+    char *content_type = "Content-Type: text/plain; charset=UTF-8";
+    char time_buffer[128] = {"Date: "};
+    char *date = get_current_time(time_buffer);
+    resp->headers[0] = access_control;
+    resp->headers[1] = conn;
+    resp->headers[2] = content_type;
+    resp->headers[3] = date;
+
+    send_response(client_fd, construct_response(resp, 0), out_msg);
+    free(resp);
+}
+
 void send_response(int client_fd, char* response, char* buffer)
 {
     u_long output_len = strlen(response);
@@ -239,4 +271,15 @@ void send_response(int client_fd, char* response, char* buffer)
 
     // free dynamically allocated memory used to generate response
     free(response);
+}
+
+char* get_current_time(char* buffer) {
+    time_t raw_time;
+    time(&raw_time);
+    struct tm *t = localtime(&raw_time);
+
+    strftime(buffer + strlen("Date: "), 126, "%a, %d %m %Y %H:%M:%S GMT", t);
+
+
+    return buffer;
 }
