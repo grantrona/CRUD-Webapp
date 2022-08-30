@@ -8,9 +8,28 @@ function init(){
 }
 
 function clearAll(){
-
     /* this function clears the contents of the form except the ID (since ID is auto generated)*/
-    
+    const inputs = document.querySelectorAll('.form-control');
+    inputs.forEach(input => {
+        if (input.id !== "id") {
+            input.value = "";
+            switch (input.id) {
+                case ("name"):
+                    input.placeholder = "Type Name Here";
+                    break;
+                case ("price"):
+                    input.placeholder = "Select Price in $ Here";
+                    break;
+                case ("desc"):
+                    input.placeholder = "Type Desc Here";
+                    break;
+                case ("url"):
+                    input.placeholder = "http://sample.com";
+                    break;
+
+            }
+        }
+    });
 }
 
 let auto = autoGen();
