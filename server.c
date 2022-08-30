@@ -9,7 +9,7 @@
 #define DEFAULT_STRLEN 30000
 #define SERVER_PORT  8080
 #define DEFAULT_NUM_HEADERS 10
-#define MAX_DIGITS 5
+#define MAX_DIGITS 10
 
 const char *products[] = { "My Product 1", "My Product 2", "My Product 3", "My Product 4"};
 
@@ -131,12 +131,12 @@ void handle_get(int client_fd, char *query, char* out_msg)
     resp->headers[3] = date;
 
     // determine body of the message
-    char to_convert[MAX_DIGITS];
+    char to_convert[MAX_DIGITS] = {'\0'};
     char* end_of_input = strchr(query, ' ');
     int i = 0;
     for (char* ptr = query; ptr != end_of_input; ptr++) {
         // determine if input from GET is valid
-        if (i == MAX_DIGITS - 1 || isalpha(ptr[0])) {
+        if (i == MAX_DIGITS - 1 || !isdigit(ptr[0])) {
             resp->status = "400 bad request";
             send_response(client_fd, construct_response(resp, 0), out_msg);
             free(resp);
