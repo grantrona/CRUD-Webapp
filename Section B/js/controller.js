@@ -26,7 +26,6 @@ function clearAll(){
                 case ("url"):
                     input.placeholder = "http://sample.com";
                     break;
-
             }
         }
     });
@@ -43,7 +42,9 @@ function loadId(){
 
 function showTotal(){
     /* this function populates the values of #total, #mark and #unmark ids of the form */
-    
+    document.querySelector('#total').value = itemOperations.items.length;
+    document.querySelector('#mark').value = itemOperations.countTotalMarked();
+    document.querySelector('#unmark').value = (itemOperations.items.length - itemOperations.countTotalMarked());
 }
 
 function bindEvents(){
@@ -64,7 +65,17 @@ function deleteRecords(){
 
 function addRecord(){
     /* this function adds a new record in itemOperations and then calls printRecord(). showTotal(), loadId() and clearAll()*/
-    
+    printRecord(new Item(
+        document.querySelector('#id').innerHTML,
+        document.querySelector('#name').value,
+        document.querySelector('#price').value,
+        document.querySelector('#desc').value,
+        document.querySelector('#color').value,
+        document.querySelector('#url').value,
+    ));
+    showTotal();
+    loadId();
+    clearAll();
 }
 function edit(){
     /*this function fills (calls fillFields()) the form with the values of the item to edit after searching it in items */ 
