@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="design.css">
+    <script src="js/utils.js"></script>
+    <script src="js/item.js"></script>
+    <script src="js/itemoperations.js"></script>
+    <script src="js/controller.js"></script>
+</head>
+
+<body>
+    <div class='container'>
+        <h2 class='alert-success text-center'>A CRUD Application</h2>
+        
+
+        <p class = 'text-center text-white bg-dark'>Enter the details of your products here. </p>
+        <div class='form-group'>
+            <label for="">Id</label>
+            <label id='id' class='form-control'>
+        </div>
+        <div class='form-group'>
+            <label for="">Name</label>
+            <input id='name' class='form-control' placeholder='Type Name Here' type="text">
+        </div>
+        <div class='form-group'>
+            <label for="">Price</label>
+            <input id='price' class='form-control' type="number" placeholder="Select Price in $ Here" min="1" max="500" step=".1">
+            <label for="">Check Exchange Rate (Base- USD):</label>
+            <select id="exchange">
+                <option value="NZD">NZD</option>
+                <option value="AUD">AUD</option>
+                <option value="CAD">CAD</option>
+                <option value="EUR">AUR</option>
+                <option value="GBP">GBP</option>
+              </select>
+              <output id="exrate" for="exchange"></output>
+
+        </div>
+        <div class='form-group'>
+            <label for="">Description</label>
+            <textarea id='desc' placeholder="Type Desc Here" class='form-control' cols="30" rows="5"></textarea>
+        </div>
+        <div class='form-group'>
+            <label for="">Color</label>
+            <input id='color' type='color' class='form-control'>
+        </div>
+        <div class='form-group'>
+            <label for="">URL</label>
+            <input id='url' placeholder="http://sample.com" type='url' class='form-control'>
+        </div>
+        <div class='form-group'>
+            <button id='add' class='btn btn-primary'>Add</button>
+            <button id='remove' class='btn btn-danger'>Delete</button>
+            <button id='update' class='btn btn-secondary'>Update</button>
+            
+        </div>
+        
+        
+        <h3>Total Records <span id='total'></span> Mark Records <span id='mark'></span> UnMark Records <span id='unmark'></span></h3>
+        <table class='table table-bordered'>
+            <thead class='thead-dark'>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Desc</th>
+                    <th>Color</th>
+                    <th>URL</th>
+                    <th>Operations</th>
+                </tr>
+            </thead>
+            <tbody id='items'>
+
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>
