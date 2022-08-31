@@ -32,6 +32,7 @@ function clearAll(){
 }
 
 let auto = autoGen();
+let selectedItem = null;
 
 function loadId(){
     /* this function automatically sets the value of ID */
@@ -42,9 +43,10 @@ function loadId(){
 
 function showTotal(){
     /* this function populates the values of #total, #mark and #unmark ids of the form */
-    document.querySelector('#total').value = itemOperations.items.length;
-    document.querySelector('#mark').value = itemOperations.countTotalMarked();
-    document.querySelector('#unmark').value = (itemOperations.items.length - itemOperations.countTotalMarked());
+    document.querySelector('#total').innerHTML = itemOperations.items.length.toString();
+    document.querySelector('#mark').innerHTML = itemOperations.countTotalMarked().toString();
+    document.querySelector('#unmark').innerHTML =
+        (itemOperations.items.length - itemOperations.countTotalMarked()).toString();
 }
 
 function bindEvents(){
@@ -57,34 +59,66 @@ function bindEvents(){
 
 function deleteRecords(){
     /* this function deletes the selected record from itemOperations and prints the table using the function printTable*/
-   
+    document.querySelector('#items').innerHTML = "";
+    itemOperations.remove();
+    printTable(itemOperations.items);
 }
-
-
-
 
 function addRecord(){
     /* this function adds a new record in itemOperations and then calls printRecord(). showTotal(), loadId() and clearAll()*/
-    printRecord(new Item(
+    const newItem = new Item (
         document.querySelector('#id').innerHTML,
         document.querySelector('#name').value,
         document.querySelector('#price').value,
         document.querySelector('#desc').value,
         document.querySelector('#color').value,
         document.querySelector('#url').value,
-    ));
+    );
+    itemOperations.add(newItem);
+    printRecord(newItem);
     showTotal();
     loadId();
     clearAll();
 }
+
 function edit(){
-    /*this function fills (calls fillFields()) the form with the values of the item to edit after searching it in items */ 
-    
-     
+    /*this function fills (calls fillFields()) the form with the values of the item to edit after searching it in items */
+    let id = this.getAttribute('data-itemid');
+    let item = itemOperations.search(id);
+    if (item !== null) {
+        fillFields(item);
+        selectedItem = item;
+    }
 }
+
 function fillFields(itemObject){
     /*this function fills the form with the details of itemObject*/
+    const inputs = document.querySelectorAll('.form-control');
+    inputs.forEach(input => {
+        input.value = "";
+        switch (input.id) {
+            case ("id"):
+                input.innerHTML = itemObject.id;
+                break;
+            case ("name"):
+                input.value = itemObject.name;
+                break;
+            case ("price"):
+                input.value = itemObject.price;
+                break;
+            case ("desc"):
+                input.value = itemObject.desc;
+                break;
+            case ("color"):
+                input.value = itemObject.color;
+                break;
+            case ("url"):
+                input.value = itemObject.url;
+                break;
+        }
+    });
 }
+
 function createIcon(className,fn, id){
  /* this function creates icons for edit and trash for each record in the table*/
     // <i class="fas fa-trash"></i>
@@ -100,7 +134,21 @@ function createIcon(className,fn, id){
 
 function updateRecord(){
     /*this function updates the record that is edited and then prints the table using printTable()*/
-    
+    if (selectedItem != null) {
+        document.querySelector('#items').innerHTML = "";
+
+        selectedItem.id = document.querySelector('#id').innerHTML;
+        selectedItem.name = document.querySelector('#name').value;
+        selectedItem.price = document.querySelector('#price').value;
+        selectedItem.desc = document.querySelector('#desc').value;
+        selectedItem.color = document.querySelector('#color').value;
+        selectedItem.url = document.querySelector('#url').value;
+
+        printTable(itemOperations.items);
+        selectedItem = null;
+        loadId();
+        clearAll();
+    }
 }
 
 function trash(){
@@ -115,7 +163,12 @@ function trash(){
 
 function printTable(items){
    /* this function calls printRecord for each item of items and then calls the showTotal function*/
+    items.forEach((item) => {
+        printRecord(item);
+    });
+    showTotal();
 }
+
 function printRecord(item){
     var tbody = document.querySelector('#items');
     var tr = tbody.insertRow();
@@ -135,5 +188,7 @@ function printRecord(item){
 
 function getExchangerate(){
     /* this function makes an AJAX call to http://apilayer.net/api/live to fetch and display the exchange rate for the currency selected*/
-    
+    onchange = (event) => {
+        alert("Hello world");
+    }
 }
