@@ -218,7 +218,45 @@ function getExchangerate() {
 }
 
 function saveLocally() {
-    const storage = WindowL
+    if (localStorage.length !== 0) {
+        if (!confirm("This will delete previous saved data!\nContinue?")) {
+            return;
+        }
+    }
+    const table = document.querySelector('#items').children;
+
+    for (let row of table) {
+        let i = 0;
+        let nextItem = new Item();
+        // loop through cells to construct the corresponding item
+        for (let cell of row.cells) {
+            switch (i) {
+                case 0:
+                    nextItem.id = cell.innerText;
+                    break;
+                case 1:
+                    nextItem.name = cell.innerText;
+                    break;
+                case 2:
+                    nextItem.price = cell.innerText;
+                    break;
+                case 3:
+                    nextItem.desc = cell.innerText;
+                    break;
+                case 4:
+                    nextItem.color = cell.innerText;
+                    break;
+                case 5:
+                    nextItem.url = cell.innerText;
+                    break;
+            }
+            i++;
+        }
+        nextItem.isMarked = false;
+
+        // Store the item as a JSON string and set its key to be the id of the item
+        localStorage.setItem(nextItem.id, JSON.stringify(nextItem));
+    }
 }
 
 function loadFromLocal() {
