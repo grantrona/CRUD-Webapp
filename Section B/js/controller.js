@@ -255,7 +255,6 @@ function saveLocally() {
         }
         nextItem.isMarked = false;
         // Store the item as a JSON string and set its key to be the id of the item
-        // localStorage.setItem(nextItem.id, JSON.stringify(nextItem));
         toStore.push(nextItem);
     }
     localStorage.setItem("stored", JSON.stringify(toStore));
