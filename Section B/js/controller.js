@@ -1,13 +1,14 @@
-window.addEventListener("load",init);
-function init(){
-    
+window.addEventListener("load", init);
+
+function init() {
+
     clearAll();
     loadId();
     showTotal();
-    bindEvents();  
+    bindEvents();
 }
 
-function clearAll(){
+function clearAll() {
     /* this function clears the contents of the form except the ID (since ID is auto generated)*/
     const inputs = document.querySelectorAll('.form-control');
     inputs.forEach(input => {
@@ -34,14 +35,14 @@ function clearAll(){
 let auto = autoGen();
 let selectedItem = null;
 
-function loadId(){
+function loadId() {
     /* this function automatically sets the value of ID */
     document.querySelector('#id').innerText = auto.next().value;
-    
+
 
 }
 
-function showTotal(){
+function showTotal() {
     /* this function populates the values of #total, #mark and #unmark ids of the form */
     document.querySelector('#total').innerHTML = itemOperations.items.length.toString();
     document.querySelector('#mark').innerHTML = itemOperations.countTotalMarked().toString();
@@ -49,24 +50,27 @@ function showTotal(){
         (itemOperations.items.length - itemOperations.countTotalMarked()).toString();
 }
 
-function bindEvents(){
-    
-    document.querySelector('#remove').addEventListener('click',deleteRecords);
-    document.querySelector('#add').addEventListener('click',addRecord);
-    document.querySelector('#update').addEventListener('click',updateRecord)
-    document.querySelector('#exchange').addEventListener('change',getExchangerate)
+function bindEvents() {
+
+    document.querySelector('#remove').addEventListener('click', deleteRecords);
+    document.querySelector('#add').addEventListener('click', addRecord);
+    document.querySelector('#update').addEventListener('click', updateRecord)
+    document.querySelector('#exchange').addEventListener('change', getExchangerate)
+
+    document.querySelector('#save').addEventListener('click', saveLocally)
+    document.querySelector('#load').addEventListener('click', loadFromLocal)
 }
 
-function deleteRecords(){
+function deleteRecords() {
     /* this function deletes the selected record from itemOperations and prints the table using the function printTable*/
     document.querySelector('#items').innerHTML = "";
     itemOperations.remove();
     printTable(itemOperations.items);
 }
 
-function addRecord(){
+function addRecord() {
     /* this function adds a new record in itemOperations and then calls printRecord(). showTotal(), loadId() and clearAll()*/
-    const newItem = new Item (
+    const newItem = new Item(
         document.querySelector('#id').innerHTML,
         document.querySelector('#name').value,
         document.querySelector('#price').value,
@@ -81,7 +85,7 @@ function addRecord(){
     clearAll();
 }
 
-function edit(){
+function edit() {
     /*this function fills (calls fillFields()) the form with the values of the item to edit after searching it in items */
     let id = this.getAttribute('data-itemid');
     let item = itemOperations.search(id);
@@ -91,7 +95,7 @@ function edit(){
     }
 }
 
-function fillFields(itemObject){
+function fillFields(itemObject) {
     /*this function fills the form with the details of itemObject*/
     const inputs = document.querySelectorAll('.form-control');
     inputs.forEach(input => {
@@ -119,20 +123,20 @@ function fillFields(itemObject){
     });
 }
 
-function createIcon(className,fn, id){
- /* this function creates icons for edit and trash for each record in the table*/
+function createIcon(className, fn, id) {
+    /* this function creates icons for edit and trash for each record in the table*/
     // <i class="fas fa-trash"></i>
     // <i class="fas fa-edit"></i>
     var iTag = document.createElement("i");
     iTag.className = className;
-    iTag.addEventListener('click',fn);
-    iTag.setAttribute("data-itemid", id) ;
+    iTag.addEventListener('click', fn);
+    iTag.setAttribute("data-itemid", id);
 
     return iTag;
 }
 
 
-function updateRecord(){
+function updateRecord() {
     /*this function updates the record that is edited and then prints the table using printTable()*/
     if (selectedItem != null) {
         document.querySelector('#items').innerHTML = "";
@@ -151,61 +155,72 @@ function updateRecord(){
     }
 }
 
-function trash(){
+function trash() {
     /*this function toggles the color of the row when its trash button is selected and updates the marked and unmarked fields */
     let id = this.getAttribute('data-itemid');
     itemOperations.markUnMark(id);
     showTotal();
     let tr = this.parentNode.parentNode;
     tr.classList.toggle('alert-danger');
-    console.log("I am Trash ",this.getAttribute('data-itemid'))
+    console.log("I am Trash ", this.getAttribute('data-itemid'))
 }
 
-function printTable(items){
-   /* this function calls printRecord for each item of items and then calls the showTotal function*/
+function printTable(items) {
+    /* this function calls printRecord for each item of items and then calls the showTotal function*/
     items.forEach((item) => {
         printRecord(item);
     });
     showTotal();
 }
 
-function printRecord(item){
+function printRecord(item) {
     var tbody = document.querySelector('#items');
     var tr = tbody.insertRow();
     var index = 0;
-    for(let key in item){
-        if(key=='isMarked'){
+    for (let key in item) {
+        if (key == 'isMarked') {
             continue;
         }
         let cell = tr.insertCell(index);
-        cell.innerText = item[key] ;
+        cell.innerText = item[key];
         index++;
     }
     var lastTD = tr.insertCell(index);
-    lastTD.appendChild(createIcon('fas fa-trash mr-2',trash,item.id));
-    lastTD.appendChild(createIcon('fas fa-edit',edit,item.id));
+    lastTD.appendChild(createIcon('fas fa-trash mr-2', trash, item.id));
+    lastTD.appendChild(createIcon('fas fa-edit', edit, item.id));
 }
 
-function getExchangerate(){
+function getExchangerate() {
     /* this function makes an AJAX call to http://apilayer.net/api/live to fetch and display the exchange rate for the currency selected*/
-        const amount = document.querySelector("#price").value;
-        if (amount.trim() !== "") {
-            const exchange = document.querySelector("#exchange").value;
+    const amount = document.querySelector("#price").value;
+    if (amount.trim() !== "") {
+        const exchange = document.querySelector("#exchange").value;
 
-            const makeHeaders = new Headers();
-            makeHeaders.append("apikey", "H9NESMGiV6oUsuPsQTw7wORN1kxZwylR");
+        const makeHeaders = new Headers();
+        makeHeaders.append("apikey", "H9NESMGiV6oUsuPsQTw7wORN1kxZwylR");
 
-            const requestOptions = {
-                method: 'GET',
-                redirect: 'follow',
-                headers: makeHeaders,
-            };
+        const requestOptions = {
+            method: 'GET',
+            redirect: 'follow',
+            headers: makeHeaders,
+        };
 
-            fetch(`https://api.apilayer.com/currency_data/convert?to=${exchange}&from=USD&amount=${amount}`, requestOptions)
-                .then(resp => resp.json())
-                .then(result => {
-                    document.querySelector('#exrate').value = result.result;
-                })
-                .then(error => {if (error !== undefined) {console.log("Caught error", error);}});
-        }
+        fetch(`https://api.apilayer.com/currency_data/convert?to=${exchange}&from=USD&amount=${amount}`, requestOptions)
+            .then(resp => {
+                if (!resp.ok) {
+                    throw Error("Response did not return OK");
+                }
+                return resp.json();
+            })
+            .then(result => { document.querySelector('#exrate').value = result.result;})
+            .catch((e) => console.log("Caught error", e));
+    }
+}
+
+function saveLocally() {
+    const storage = WindowL
+}
+
+function loadFromLocal() {
+
 }

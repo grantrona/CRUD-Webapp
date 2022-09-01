@@ -55,13 +55,17 @@
             <label for="">URL</label>
             <input id='url' placeholder="http://sample.com" type='url' class='form-control'>
         </div>
-        <div class='form-group'>
-            <button id='add' class='btn btn-primary'>Add</button>
-            <button id='remove' class='btn btn-danger'>Delete</button>
-            <button id='update' class='btn btn-secondary'>Update</button>
-            
+        <div class='form-group d-flex justify-content-between'>
+            <div class='form-group'>
+                <button id='add' class='btn btn-primary'>Add</button>
+                <button id='remove' class='btn btn-danger'>Delete</button>
+                <button id='update' class='btn btn-secondary'>Update</button>
+            </div>
+            <div class='form-group'>
+                <button id="save" class="btn btn-warning">Save to Local Storage</button>
+                <button id="load" class="btn btn-info">Load from Local Storage</button>
+            </div>
         </div>
-        
         
         <h3>Total Records <span id='total'></span> Mark Records <span id='mark'></span> UnMark Records <span id='unmark'></span></h3>
         <table class='table table-bordered'>
