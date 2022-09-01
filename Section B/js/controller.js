@@ -188,7 +188,24 @@ function printRecord(item){
 
 function getExchangerate(){
     /* this function makes an AJAX call to http://apilayer.net/api/live to fetch and display the exchange rate for the currency selected*/
-    onchange = (event) => {
-        alert("Hello world");
-    }
+        const amount = document.querySelector("#price").value;
+        if (amount.trim() !== "") {
+            const exchange = document.querySelector("#exchange").value;
+
+            const makeHeaders = new Headers();
+            makeHeaders.append("apikey", "H9NESMGiV6oUsuPsQTw7wORN1kxZwylR");
+
+            const requestOptions = {
+                method: 'GET',
+                redirect: 'follow',
+                headers: makeHeaders,
+            };
+
+            fetch(`https://api.apilayer.com/currency_data/convert?to=${exchange}&from=USD&amount=${amount}`, requestOptions)
+                .then(resp => resp.json())
+                .then(result => {
+                    document.querySelector('#exrate').value = result.result;
+                })
+                .then(error => {if (error !== undefined) {console.log("Caught error", error);}});
+        }
 }
