@@ -1,0 +1,16 @@
+{
+  "name": "serverjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "pgDatabase.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "experss": "^0.0.1-security",
+    "pg": "^8.8.0"
+  }
+}

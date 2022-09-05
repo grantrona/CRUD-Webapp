@@ -1,5 +1,3 @@
-import * as itemDB from "./itemDB";
-
 window.addEventListener("load", init);
 
 function init() {
