@@ -339,7 +339,7 @@ function saveToServer() {
                     if (!resp.ok) {
                         throw Error("Post Response did not return OK");
                     }
-                    return resp.json();
+                    return resp.statusText
                 })
                 .then(data => {
                     console.log(data);
