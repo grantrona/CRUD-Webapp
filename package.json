@@ -1,5 +1,5 @@
 {
-  "name": "toy-server",
+  "name": "nwen304-webapp",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,17 +8,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/grantrona/Toy-Server.git"
+    "url": "git+https://github.com/grantrona/CRUD-Webapp.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/grantrona/Toy-Server/issues"
+    "url": "https://github.com/grantrona/CRUD-Webapp/issues"
   },
-  "homepage": "https://github.com/grantrona/Toy-Server#readme",
+  "homepage": "https://github.com/grantrona/CRUD-Webapp#readme",
   "dependencies": {
-    "express": "^4.18.1",
     "pg": "^8.8.0"
   }
 }
