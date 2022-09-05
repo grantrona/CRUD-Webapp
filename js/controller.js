@@ -305,8 +305,48 @@ function loadFromLocal() {
 }
 
 function saveToServer() {
-    //TODO fetch() from localhost!
+    const table = document.querySelector('#items').children;
+    if (table.length === 0) {
+        alert("table is empty, no changes saved!")
+        return;
+    }
+    if (!confirm("This will delete previous saved data!\nContinue?")) {
+        return;
+    }
 
+    const makeDeleteHeaders = new Headers();
+    const deleteRequestOptions = {
+        method: 'DELETE',
+        headers: makeDeleteHeaders,
+    };
+
+    fetch(`http://localhost:5000/items`, deleteRequestOptions)
+        .then( (resp) => {
+            if (!resp.ok) {
+                throw Error("Deletion Response did not return OK");
+            }
+        })
+        .then(() => {
+            fetch(`http://localhost:5000/items`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: itemsAsJson(table),
+            })
+                .then((resp) => {
+                    if (!resp.ok) {
+                        throw Error("Post Response did not return OK");
+                    }
+                    return resp.json();
+                })
+                .then(data => {
+                    console.log(data);
+                })
+                .catch((e) => console.log("Caught error", e));
+        })
+        .catch((e) => console.log("Caught error", e));
 }
 
 function loadFromServer() {
@@ -353,4 +393,41 @@ function loadFromServer() {
             }
         })
         .catch((e) => console.log("Caught error", e));
+}
+
+function itemsAsJson(table) {
+    let allItems = []
+
+    for (let row of table) {
+        let i = 0;
+        let nextItem = new Item();
+        // loop through cells to construct the corresponding item
+        for (let cell of row.cells) {
+            switch (i) {
+                case 0:
+                    nextItem.id = cell.innerText;
+                    break;
+                case 1:
+                    nextItem.name = cell.innerText;
+                    break;
+                case 2:
+                    nextItem.price = cell.innerText;
+                    break;
+                case 3:
+                    nextItem.desc = cell.innerText;
+                    break;
+                case 4:
+                    nextItem.color = cell.innerText;
+                    break;
+                case 5:
+                    nextItem.url = cell.innerText;
+                    break;
+            }
+            i++;
+        }
+        nextItem.isMarked = false;
+        // Store the item as a JSON string and set its key to be the id of the item
+        allItems.push(nextItem);
+    }
+    return JSON.stringify(allItems)
 }

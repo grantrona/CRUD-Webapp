@@ -10,7 +10,7 @@ const pool = new Pool ({
 });
 
 const getItems = (req, resp) => {
-    pool.query('SELECT * FROM items ORDER BY id DESC', (err, results) => {
+    pool.query('SELECT * FROM items ORDER BY id ASC', (err, results) => {
         if (err) {
             console.log(err.stack);
         }
@@ -24,16 +24,17 @@ const getItems = (req, resp) => {
 }
 
 const postItems = (req, resp) => {
-    const { id, name, price, description, color, url } = req.body;
-    pool.query('INSERT INTO items (id, name, price, description, color, url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
-        , [id, name, price, description, color, url], (error, results) => {
-        if (error) {
-            console.log(error.stack);
-        }
-        else {
-            resp.status(201).send(`Item added with ID: ${results.rows[0].id}`)
-        }
+    let items = req.body;
+    items.forEach((item) => {
+        const { id, name, price, desc, color, url } = item;
+        pool.query('INSERT INTO items (id, name, price, description, color, url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
+            , [id, name, price, desc, color, url], (error, results) => {
+                if (error) {
+                    console.log(error.stack);
+                }
+            })
     })
+    resp.status(201).send(`Item added to DB`)
 }
 
 const deleteItems = (req, resp) => {
