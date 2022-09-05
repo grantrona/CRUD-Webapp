@@ -25,7 +25,6 @@ const getItems = (req, resp) => {
 
 const postItems = (req, resp) => {
     const { id, name, price, description, color, url } = req.body;
-    console.log(req);
     pool.query('INSERT INTO items (id, name, price, description, color, url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *'
         , [id, name, price, description, color, url], (error, results) => {
         if (error) {
@@ -34,7 +33,6 @@ const postItems = (req, resp) => {
         else {
             resp.status(201).send(`Item added with ID: ${results.rows[0].id}`)
         }
-
     })
 }
 

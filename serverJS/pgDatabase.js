@@ -12,12 +12,6 @@ app.use(
     })
 );
 
-// app.get('/', (req, resp) => {
-//     resp.json({
-//         info: 'TESTING!'
-//     })
-// });
-
 app.get('/items', database.getItems);
 
 app.post('/items', database.postItems);
